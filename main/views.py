@@ -2,7 +2,7 @@ import base64
 import hashlib
 
 import urllib3
-from django.contrib.sites import requests
+import requests
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -11,10 +11,10 @@ from django.views.decorators.http import require_http_methods
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SANAL_POS = {
-    'customer_id': '11111',  # Müsteri Numarasi
-    'merchant_id': '1',  # Magaza Kodu
-    'username': 'test',  # Web Yönetim ekranalrindan olusturulan api rollü kullanici
-    'password': 'test',  # Web Yönetim ekranalrindan olusturulan api rollü kullanici sifresi
+    'customer_id': '201282',  # Müsteri Numarasi
+    'merchant_id': '3282',  # Magaza Kodu
+    'username': 'nilegit',  # Web Yönetim ekranalrindan olusturulan api rollü kullanici
+    'password': '856760',  # Web Yönetim ekranalrindan olusturulan api rollü kullanici sifresi
     'ok_url': 'http://127.0.0.1:8000/payment_return/',
     'fail_url': 'http://127.0.0.1:8000/payment_return/',
     'kart_onay_url': 'https://boa.vakifkatilim.com.tr/VirtualPOS.Gateway/Home/ThreeDModelPayGate',
@@ -41,7 +41,6 @@ def main(request):
     return render(request, "index.html", {})
 
 
-@require_http_methods(['POST'])
 @csrf_exempt
 def payment(request):
     amount = 1 * 100
@@ -53,6 +52,7 @@ def payment(request):
         f"{SANAL_POS['merchant_id']}{merchant_order_id}{amount}{SANAL_POS['ok_url']}{SANAL_POS['fail_url']}{SANAL_POS['username']}{hashed_password}".encode(
             'ISO-8859-9')).digest()).decode()
     data = f"""
+    <?xml version="1.0" encoding="UTF-16"?>
     <VPosMessageContract
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -85,7 +85,7 @@ def payment(request):
     <PhoneNumber>{int(MERCHANT['phone'])}</PhoneNumbe>
     <OrderId>{merchant_order_id}</OrderId>
     <AddressId>{int(MERCHANT['adres_id'])}</AddressId>
-    <Email>{int(MERCHANT['mail'])}</Ema>
+    <Email>{str(MERCHANT['mail'])}</Ema>
     </VPosAddressContract>
     </Addresses>
     <APIVersion>1.0.0</APIVersion>
@@ -93,15 +93,16 @@ def payment(request):
     <CardExpireDateYear>{int(SANAL_KART['son_kullanma_tarihi_yil'])}</CardExpireDateYear>
     <CardExpireDateMonth>{int(SANAL_KART['son_kullanma_tarihi_ay'])}</CardExpireDateMonth>
     <CardCVV2>{int(SANAL_KART['cvv'])}</CardCVV2>
-    <CardHolderName>{int(SANAL_KART['kart_name'])}</CardHolderName>
+    <CardHolderName>{str(SANAL_KART['kart_name'])}</CardHolderName>
     <PaymentType>1</PaymentType>
     <DebtId>0</DebtId>
     <SurchargeAmount>0</SurchargeAmount>
     <SGKDebtAmount>0</SGKDebtAmount>
     <InstallmentMaturityCommisionFlag>0</InstallmentMaturityCo mmisionFlag>
     <TransactionSecurity>3</TransactionSecurity>
-    </VPosMessageContract> 
+    </VPosMessageContract>
     """
+
     headers = {'Content-Type': 'application/xml'}
     r = requests.post(SANAL_POS['kart_onay_url'], data=data.encode('ISO-8859-9'), headers=headers)
     return HttpResponse(r)
