@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main, name='mainPage'),
     path('payment/', views.payment, name="payment"),
-    path('payment_return/', views.payment_return, name='ok_url'),
+    # path('ok-url/', views.ok_url, name='ok_url'),
+    path('fail-url/', views.fail_url, name='fail_url'),
 ]
